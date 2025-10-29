@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Julia Moura - Monthly Report (October 2025)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Stone, Slate, and Teal) -->
+    <!-- 
+      Application Structure Plan: 
+      The SPA is designed as a top-down executive dashboard, prioritizing the information a manager (the boss) needs.
+      1.  **Header & Key Metrics:** Starts with the most critical "bottom-line" numbers (Overall Progress, Attendance) for an immediate ROI assessment. This report focuses on the 29/09-22/10 period.
+      2.  **Detailed Skill Progression:** A grouped bar chart shows the total progress from Start (Mar) to Now (Oct). This provides the "numbers" the boss wants. The interactive notes are updated to show *only* the feedback from the new target period.
+      3.  **Attendance & Topics:** This section is filtered to *only* show the 29/09-22/10 period. An attendance donut chart summarizes participation, and the topic list is specific to this timeframe.
+      4.  **Next Steps:** A clear, forward-looking conclusion based *only* on the latest notes.
+    -->
+    <!-- 
+      Visualization & Content Choices:
+      * Report Info: Overall Proficiency (30% -> 47%)
+          * Goal: Inform (Key ROI)
+          * Viz/Method: Large statistic "Key Metric" cards.
+          * Interaction: None.
+          * Justification: Immediate, high-visibility "headline" numbers showing total progress.
+          * Library: HTML/Tailwind.
+      * Report Info: Skill Data (Reading, Listening, etc., Mar vs. Oct)
+          * Goal: Compare (Change over time)
+          * Viz/Method: Grouped Bar Chart (Chart.js)
+          * Interaction: JS-powered buttons (Reading, Listening, etc.) below the chart. Clicking a button updates a dedicated text area with the corresponding *October-specific* "Status Note".
+          * Justification: Visually superior for showing progress. Interaction provides on-demand, timely context.
+          * Library: Chart.js, Vanilla JS.
+      * Report Info: Lesson Log (29/09 - 22/10)
+          * Goal: Inform (Proportion/Attendance)
+          * Viz/Method: Donut Chart (Chart.js) and a simple HTML list for topics/cancellations.
+          * Interaction: Tooltip on hover.
+          * Justification: Instantly communicates the attendance ratio for this specific period.
+          * Library: Chart.js, HTML.
+      * Report Info: Next Steps (based on Oct notes)
+          * Goal: Inform (Action Plan)
+          * Viz/Method: Styled HTML list.
+          * Interaction: None.
+          * Justification: Clear, forward-looking summary based on latest feedback.
+          * Library: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 768px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .chart-container-sm {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 40vh;
+        }
+        .metric-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .skill-toggle {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .skill-toggle.active {
+            background-color: #0d9488;
+            color: white;
+            border-color: #0d9488;
+        }
+        .skill-toggle:not(.active) {
+            background-color: #f1f5f9;
+            color: #334155;
+            border-color: #e2e8f0;
+        }
+        .skill-toggle:not(.active):hover {
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800">
+
+    <div class="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-slate-900 sm:text-5xl">Julia Moura's Progress Report</h1>
+            <p class="mt-3 text-xl text-slate-600">Report for: 29/09/2025 - 22/10/2025</p>
+            <p class="mt-1 text-sm text-slate-500">Prepared by: Michael Presti (23/10/25)</p>
+        </header>
+
+        <section id="summary" class="mb-16">
+            <h2 class="text-3xl font-semibold text-slate-900 mb-6 text-center">Monthly Executive Summary</h2>
+            <p class="text-lg text-slate-700 max-w-3xl mx-auto mb-8 text-center">
+                This report focuses on Julia's progress during the period of 29/09 to 22/10. She continues to show steady overall improvement, with proficiency in B1-level tasks increasing to **47%**. Her speaking showed good progress this month, while new challenges were identified in listening and specific grammar areas.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div class="metric-card text-center">
+                    <span class="text-sm font-medium text-slate-500">Overall Proficiency (B1 Tasks)</span>
+                    <div class="flex items-baseline justify-center gap-2 mt-2">
+                        <span class="text-5xl font-bold text-teal-600">47<span class="text-4xl">%</span></span>
+                    </div>
+                    <span class="text-base text-slate-600">up from <span class="font-semibold text-slate-700">30%</span> in March</span>
+                </div>
+                <div class="metric-card text-center">
+                    <span class="text-sm font-medium text-slate-500">Recent Attendance (29/09 - 22/10)</span>
+                    <div class="flex items-baseline justify-center gap-2 mt-2">
+                        <span class="text-5xl font-bold text-slate-800">6<span class="text-4xl">/7</span></span>
+                    </div>
+                    <span class="text-base text-slate-600">Lessons Delivered</span>
+                </div>
+                <div class="metric-card text-center">
+                    <span class="text-sm font-medium text-slate-500">Strongest Skill</span>
+                    <div class="flex items-baseline justify-center gap-2 mt-2">
+                        <span class="text-5xl font-bold text-slate-800">58<span class="text-4xl">%</span></span>
+                    </div>
+                    <span class="text-base text-slate-600">Reading Comprehension</span>
+                </div>
+                <div class="metric-card text-center">
+                    <span class="text-sm font-medium text-slate-500">Main Development Area</span>
+                    <div class="flex items-baseline justify-center gap-2 mt-2">
+                        <span class="text-5xl font-bold text-slate-800">38<span class="text-4xl">%</span></span>
+                    </div>
+                    <span class="text-base text-slate-600">Listening Comprehension</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="mb-16">
+            <h2 class="text-3xl font-semibold text-slate-900 mb-6 text-center">Detailed Skill Progression (March vs. October)</h2>
+            <p class="text-lg text-slate-700 max-w-3xl mx-auto mb-8 text-center">
+                This chart visualizes Julia's total progress from her start in March to the end of this reporting period. Click on a skill button below to see the detailed status note *from this specific period* (Sept/Oct).
+            </p>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-3 mt-8">
+                    <button id="btn-reading" class="skill-toggle active" data-skill="reading">Reading</button>
+                    <button id="btn-listening" class="skill-toggle" data-skill="listening">Listening</button>
+                    <button id="btn-writing" class="skill-toggle" data-skill="writing">Writing</button>
+                    <button id="btn-speaking" class="skill-toggle" data-skill="speaking">Speaking</button>
+                </div>
+
+                <div id="skill-note-display" class="mt-6 p-4 bg-stone-100 rounded-md min-h-[6rem] flex items-center justify-center transition-all duration-300">
+                    <p class="text-base text-slate-800 text-center" id="skill-note-text"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="attendance" class="mb-16">
+            <h2 class="text-3xl font-semibold text-slate-900 mb-6 text-center">Recent Attendance & Topics (29/09 - 22/10)</h2>
+            <p class="text-lg text-slate-700 max-w-3xl mx-auto mb-8 text-center">
+                This section breaks down attendance for the 7 scheduled sessions in this period, and the key topics covered in the completed lessons.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4 text-center">Attendance (29/09 - 22/10)</h3>
+                    <div class="chart-container-sm">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-slate-600">
+                        <h4 class="font-semibold text-slate-700">Cancellation Reasons:</h4>
+                        <ul class="list-disc list-inside ml-2 mt-1">
+                            <li>Student (CSA): 1</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 h-full">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Key Topics Covered</h3>
+                    <p class="text-slate-600 mb-4">The focus was on comparative language, real-world topics, and reviewing key tenses.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-teal-100 text-teal-800 font-semibold text-sm">1</span>
+                            <span class="ml-3 text-base text-slate-700">Word order with superlatives</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-teal-100 text-teal-800 font-semibold text-sm">2</span>
+                            <span class="ml-3 text-base text-slate-700">Comparing cities (SP, SF, Chicago, Miami, LA)</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-teal-100 text-teal-800 font-semibold text-sm">3</span>
+                            <span class="ml-3 text-base text-slate-700">Discussing living conditions in São Paulo</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-teal-100 text-teal-800 font-semibold text-sm">4</span>
+                            <span class="ml-3 text-base text-slate-700">Business Partner: Discussing leisure activities</span>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-teal-100 text-teal-800 font-semibold text-sm">5</span>
+                            <span class="ml-3 text-base text-slate-700">Review: "Have you ever...?" (Present Perfect)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="next-steps" class="bg-white rounded-lg shadow-lg p-8">
+            <h2 class="text-3xl font-semibold text-slate-900 mb-6 text-center">Next Steps & Recommendations</h2>
+            <p class="text-lg text-slate-700 max-w-3xl mx-auto mb-8 text-center">
+                Based on observations from this period, the following steps are recommended.
+            </p>
+            <ul class="space-y-4 max-w-2xl mx-auto">
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold text-lg mt-1">→</span>
+                    <div class="ml-4">
+                        <h4 class="text-lg font-semibold text-slate-800">Target Listening Strategy</h4>
+                        <p class="text-slate-600">Focus on exercises that encourage listening for the main idea *without* translating, as this was identified as the primary barrier to comprehension.</p>
+                    </div>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold text-lg mt-1">→</span>
+                    <div class="ml-4">
+                        <h4 class="text-lg font-semibold text-slate-800">Solidify Core Grammar</h4>
+                        <p class="text-slate-600">Run specific drills on possessives ('s) and common structures (e.g., "there is" vs. "there are") to fix recurring mistakes identified this month.</p>
+                    </div>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 h-8 w-8 flex items-center justify-center rounded-full bg-teal-600 text-white font-bold text-lg mt-1">→</span>
+                    <div class="ml-4">
+                        <h4 class="text-lg font-semibold text-slate-800">Build on Speaking Success</h4>
+                        <p class="text-slate-600">Leverage the "good use of present perfect" to build more complex conversational turns, applying this confidence to other tenses.</p>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+    </div>
+
+    <footer class="text-center py-8 mt-12 border-t border-slate-200">
+        <p class="text-sm text-slate-500">&copy; 2025 | Report prepared by Michael Presti</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const skillNotes = {
+                reading: "No specific feedback for this period. Reading remains her strongest skill.",
+                listening: "A lot of difficulty in listening activities. This seems to be due to a habit of constant translation.",
+                writing: "Identified recurring mistakes with possessives ('s) and the 'there is / there are' structure. This will be a focus for future classes.",
+                speaking: "Showed good, confident use of the Present Perfect ('Have you ever...')."
+            };
+
+            const noteTextElement = document.getElementById('skill-note-text');
+            const toggleButtons = document.querySelectorAll('.skill-toggle');
+
+            function updateSkillNote(skill) {
+                noteTextElement.textContent = skillNotes[skill];
+                toggleButtons.forEach(btn => {
+                    if (btn.dataset.skill === skill) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    updateSkillNote(e.target.dataset.skill);
+                });
+            });
+
+            updateSkillNote('reading');
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.font.weight = '500';
+
+            const skillsCtx = document.getElementById('skillsChart').getContext('2d');
+            new Chart(skillsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Reading', 'Listening', 'Writing', 'Speaking'],
+                    datasets: [
+                        {
+                            label: 'March (Start)',
+                            data: [30, 20, 30, 25],
+                            backgroundColor: '#a5f3fc',
+                            borderColor: '#06b6d4',
+                            borderWidth: 2,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'October (Current)',
+                            data: [58, 38, 48, 45],
+                            backgroundColor: '#0d9488',
+                            borderColor: '#0f766e',
+                            borderWidth: 2,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: {
+                                weight: 'bold',
+                                size: 16
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            padding: 12,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(attendanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lessons Delivered', 'Lessons Canceled'],
+                    datasets: [{
+                        data: [6, 1],
+                        backgroundColor: [
+                            '#0d9488',
+                            '#f1f5f9'
+                        ],
+                        borderColor: [
+                            '#0f766e',
+                            '#cbd5e1'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: {
+                                weight: 'bold',
+                                size: 16
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            padding: 12,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
